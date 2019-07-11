@@ -139,20 +139,6 @@ class MatrixFactorization:
         return (
             self.biase
             + self.biase_users[:, np.newaxis]
-            + self.biase_items[np.newaxis:, ]
+            + self.biase_items[np.newaxis :,]
             + self.user_latfact_matrix.dot(self.item_latfact_matrix.T)
         )
-
-
-R_MATRIX = np.array([
-    [5, 3, 0, 1],
-    [4, 0, 0, 1],
-    [1, 1, 0, 5],
-    [1, 0, 0, 4],
-    [0, 1, 5, 4],
-])
-
-M_F = MatrixFactorization(R_MATRIX)
-tr_proc = M_F.train()
-
-print(tr_proc)
