@@ -4,6 +4,7 @@ Inspired by : https://github.com/albertauyeung/matrix-factorization-in-python/bl
 """
 
 import numpy as np
+import params
 
 
 class MatrixFactorization:
@@ -14,7 +15,7 @@ class MatrixFactorization:
     http://www.albertauyeung.com/post/python-matrix-factorization/.
     """
 
-    def __init__(self, r, k, alpha, beta, iterations):
+    def __init__(self, r):
         """
         Perform matrix factorization to predict empty
         entries in a matrix.
@@ -24,20 +25,24 @@ class MatrixFactorization:
         - k (int)       : number of latent dimensions
         - alpha (float) : learning rate
         - beta (float)  : regularization parameter
+        - Seed (Int)    : Random seed used to initialize the pseudo-random number generator.
+                          It used to reproduce the same results in unit tests (random effect)
         """
 
         self.r_matrix = r
         self.num_users, self.num_items = self.r_matrix.shape
-        self.num_latfactors = k
-        self.alpha = alpha
-        self.beta = beta
-        self.iterations = iterations
+        self.num_latfactors = params.k
+        self.alpha = params.alpha
+        self.beta = params.beta
+        self.iterations = params.iterations
+        self.seed = params.seed
 
-        # Initialize user and item latent feature matrice
-        self.user_latfact_matrix = np.random.normal(
+        # Initialize user and item latent factors matrix
+        rng = np.random.RandomState(self.seed)
+        self.user_latfact_matrix = rng.normal(
             scale=1.0 / self.num_latfactors, size=(self.num_users, self.num_latfactors)
         )
-        self.item_latfact_matrix = np.random.normal(
+        self.item_latfact_matrix = rng.normal(
             scale=1.0 / self.num_latfactors, size=(self.num_items, self.num_latfactors)
         )
 
@@ -56,13 +61,16 @@ class MatrixFactorization:
 
     def train(self):
         """
-        training process.
+        Perform stochastic gradient descent for number of iterations.
+
+        Training_process is a list of couples (id_iteration, mean_square_error)
         """
 
-        # Perform stochastic gradient descent for number of iterations
+        #
         training_process = []
         for i in range(self.iterations):
-            np.random.shuffle(self.samples)
+            rng = np.random.RandomState(self.seed)
+            rng.shuffle(self.samples)
             self.sgd()
             mse = self.mse()
             training_process.append((i, mse))
@@ -126,7 +134,7 @@ class MatrixFactorization:
 
     def full_matrix(self):
         """
-        Computer the full matrix using the resultant biases, biase_users and biase_items.
+        Computer the full matrix using the resultant biases, users and items biases.
         """
         return (
             self.biase
@@ -135,3 +143,16 @@ class MatrixFactorization:
             + self.user_latfact_matrix.dot(self.item_latfact_matrix.T)
         )
 
+
+R_MATRIX = np.array([
+    [5, 3, 0, 1],
+    [4, 0, 0, 1],
+    [1, 1, 0, 5],
+    [1, 0, 0, 4],
+    [0, 1, 5, 4],
+])
+
+M_F = MatrixFactorization(R_MATRIX)
+tr_proc = M_F.train()
+
+print(tr_proc)
